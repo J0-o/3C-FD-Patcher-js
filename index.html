@@ -2,198 +2,350 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Client-side EXE Patcher (Steam/GOG SHA-256)</title>
+<title>3C-FD Patcher (Client-side)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
 <style>
-  :root { --primary:#007acc; --muted:#666; }
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:980px;margin:28px auto;padding:0 16px;color:#111}
-  h1{font-size:20px;margin:0 0 12px}
-  label{display:block;margin-top:12px;font-weight:600}
-  input[type="text"], textarea{width:100%;box-sizing:border-box;padding:8px;font-family:monospace}
-  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
-  .col{flex:1 1 260px}
-  button,.button{display:inline-block;padding:8px 12px;border:0;border-radius:6px;background:var(--primary);color:#fff;text-decoration:none;cursor:pointer}
-  button[disabled], .button.disabled{opacity:.5;pointer-events:none}
-  .log{white-space:pre-wrap;background:#f7f7f7;padding:10px;border-radius:6px;margin-top:12px;font-family:monospace}
-  .muted{color:var(--muted)}
-  .patch-list{border:1px solid #ddd;border-radius:6px;padding:8px;margin-top:8px;max-height:360px;overflow:auto}
-  .patch-item{display:flex;gap:8px;align-items:flex-start;border-bottom:1px dashed #eee;padding:8px 0}
-  .patch-item:last-child{border-bottom:0}
-  .desc{color:#333}
-  .parts{color:#666;font-size:12px}
-  .badge{display:inline-block;background:#eee;border-radius:4px;padding:0 6px;font-size:12px;margin-left:6px}
+body {
+  background:#000;
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  max-width:980px;
+  margin:40px auto;
+  padding:0 16px;
+}
+h1 {
+  text-align:center;
+  font-size:22px;
+  margin:12px 0 24px;
+  letter-spacing:0.05em;
+}
+.logo {
+  display:block;
+  margin:0 auto 8px;
+  max-width:280px;
+}
+label {display:block;margin-top:10px;font-weight:600}
+input[type="text"],textarea {
+  width:100%;
+  box-sizing:border-box;
+  padding:8px;
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  font-family:monospace;
+}
+button,.button {
+  margin-top:10px;
+  border:none;
+  border-radius:4px;
+  background:#fff;
+  color:#000;
+  font-weight:600;
+  cursor:pointer;
+  text-decoration:none;
+  height:44px;
+  min-width:160px;
+  padding:0 20px;
+  text-align:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  line-height:1;
+}
+button[disabled],.button.disabled {
+  opacity:.4;
+  pointer-events:none;
+}
+.log {
+  white-space:pre-wrap;
+  background:#111;
+  color:#ccc;
+  padding:10px;
+  border-radius:6px;
+  margin-top:12px;
+  font-family:monospace;
+}
+.patch-list {
+  border:1px solid #333;
+  border-radius:6px;
+  padding:8px;
+  margin-top:8px;
+  max-height:360px;
+  overflow:auto;
+  background:#111;
+}
+.row.buttons {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:16px;
+}
+.patch-item {
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  border-bottom:1px dashed #333;
+  padding:8px 0;
+}
+.patch-item:last-child {border-bottom:0}
+.desc {color:#aaa}
+.badge {
+  display:inline-block;
+  background:#222;
+  border-radius:4px;
+  padding:0 6px;
+  font-size:12px;
+  margin-left:6px;
+  color:#aaa;
+}
 </style>
 </head>
 <body>
-  <h1>Client-side EXE Patcher (SHA-256)</h1>
-  <p class="muted">No uploads. The EXE is patched entirely in your browser and re-downloaded locally.</p>
 
-  <div class="row">
-    <div class="col">
-      <label>Pick EXE file
-        <input id="file" type="file" accept=".exe,*/*"/>
-      </label>
-    </div>
-    <div class="col">
-      <label>Detected edition
-        <input id="detected" type="text" readonly value="(none)"/>
-      </label>
-    </div>
-    <div class="col">
-      <label>SHA-256 (computed)
-        <input id="hash" type="text" readonly/>
-      </label>
-    </div>
+<img src="./logo.png" alt="3C-FD Patcher" class="logo">
+<p style="text-align:center;color:#aaa;margin-top:-12px;">While you sleep in the medical room, 3C-FD is patching your game.</p>
+
+<div class="row">
+  <div class="col">
+    <label>Pick EXE file
+      <input id="file" type="file" accept=".exe"/>
+    </label>
   </div>
+  <div class="col">
+    <label>Detected edition
+      <input id="detected" type="text" readonly value="(none)"/>
+    </label>
+  </div>
+  <div class="col">
+    <label>SHA-256
+      <input id="hash" type="text" readonly/>
+    </label>
+  </div>
+</div>
 
-  <div class="row">
-    <div class="col" style="flex:2">
-      <label>Available patches <span class="badge" id="editionBadge">–</span></label>
-      <div id="patchList" class="patch-list">Load an EXE to detect edition and list patches.</div>
-    </div>
-    <div class="col" style="flex:1;align-self:center">
-      <button id="load">Load patches for detected edition</button>
+<div class="row">
+  <div class="col" style="flex:2">
+    <label>Available patches <span class="badge" id="editionBadge">–</span></label>
+    <div id="patchList" class="patch-list">Load an EXE to detect edition and list patches.</div>
+  </div>
+  <div class="col" style="flex:1;align-self:center">
+    <div class="row buttons">
       <button id="apply" disabled>Apply selected patches</button>
       <a id="download" class="button disabled" download>Download patched file</a>
     </div>
   </div>
+</div>
 
-  <div id="log" class="log"></div>
+<div id="log" class="log"></div>
 
-<script>
-/* =========================
-   SHA-256 edition hashes
-   ========================= */
+<script type="module">
+// SHA-256 reference hashes
 const STEAM_SHA256 = "6a522e71631dcee93467bd2010f3b23d9145326e1e2e89305f13ab104dbbffef";
 const GOG_SHA256   = "777bee235a9e8bdd9863f6741bc3ac54bb6a113b62b1d2e4d12bbe6db963a914";
 
-/* =========================
-   Helpers
-   ========================= */
+// Element shortcuts and globals
 const $ = s => document.querySelector(s);
 const fileEl = $('#file');
 const hashEl = $('#hash');
 const detectedEl = $('#detected');
 const editionBadge = $('#editionBadge');
 const patchListEl = $('#patchList');
-const loadBtn = $('#load');
 const applyBtn = $('#apply');
 const dlEl = $('#download');
 const logEl = $('#log');
-let fileAB=null, workBuf=null, blobUrl=null, detectedEdition=null, groups={}, groupMeta={};
+let fileAB = null, workBuf = null, blobUrl = null, detectedEdition = null;
+let groups = {}, groupMeta = {};
 
+// Logging helpers
 function log(...m){ logEl.textContent += m.join(' ') + '\n'; logEl.scrollTop = logEl.scrollHeight; }
 function clearLog(){ logEl.textContent = ''; }
 
-/* --- SHA-256 hash --- */
+// Utility functions
 async function sha256(ab) {
   const digest = await crypto.subtle.digest('SHA-256', ab);
   return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-
-/* --- Small helpers for patch logic --- */
 function cleanHex(str){return str.replace(/0x/ig,'').replace(/[^0-9A-Fa-f]/g,'').toUpperCase();}
-function hexToBytes(hex){if(hex.length%2)throw new Error('Odd hex');const out=new Uint8Array(hex.length/2);for(let i=0,j=0;i<hex.length;i+=2,j++)out[j]=parseInt(hex.substr(i,2),16);return out;}
-function parseKV(txt){const kv={};for(const l of txt.split(/\r?\n/)){const m=l.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);if(m)kv[m[1].toUpperCase()]=m[2];}return kv;}
+function hexToBytes(hex){
+  if(hex.length % 2) throw new Error('Odd hex');
+  const out = new Uint8Array(hex.length/2);
+  for(let i=0,j=0;i<hex.length;i+=2,j++) out[j] = parseInt(hex.substr(i,2),16);
+  return out;
+}
+function parseKV(txt){
+  const kv={};
+  for(const l of txt.split(/\r?\n/)){
+    const m=l.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);
+    if(m) kv[m[1].toUpperCase()] = m[2];
+  }
+  return kv;
+}
 function baseNameForGroup(fn){return fn.replace(/_\d+\.txt$/i,'.txt').replace(/\.txt$/i,'');}
+
+// Render patch list
 function renderPatchList(){
-  if(!Object.keys(groups).length){patchListEl.innerHTML='No patches found.';applyBtn.disabled=true;return;}
+  if(!Object.keys(groups).length){
+    patchListEl.innerHTML='No patches found.';
+    applyBtn.disabled=true;
+    return;
+  }
   const frag=document.createDocumentFragment();
   for(const name of Object.keys(groups).sort()){
     const files=groups[name];
     const wrap=document.createElement('div');
     wrap.className='patch-item';
-    const cb=document.createElement('input');cb.type='checkbox';cb.dataset.group=name;cb.id='cb_'+name;cb.style.marginTop='3px';
-    const lab=document.createElement('label');lab.htmlFor=cb.id;lab.style.flex='1';
-    const t=document.createElement('div');t.innerHTML=`<strong>${name}</strong> <span class="parts">(parts: ${files.length})</span>`;
-    const d=document.createElement('div');d.className='desc muted';d.textContent='(loading...)';
-    lab.appendChild(t);lab.appendChild(d);
-    wrap.appendChild(cb);wrap.appendChild(lab);
+    const cb=document.createElement('input');
+    cb.type='checkbox'; cb.dataset.group=name; cb.id='cb_'+name; cb.style.marginTop='3px';
+    const lab=document.createElement('label');
+    lab.htmlFor=cb.id; lab.style.flex='1';
+    const t=document.createElement('div');
+    t.innerHTML=`<strong>${name}</strong> <span class="parts">(parts: ${files.length})</span>`;
+    const d=document.createElement('div');
+    d.className='desc muted';
+    d.textContent='(loading...)';
+    lab.appendChild(t);
+    lab.appendChild(d);
+    wrap.appendChild(cb);
+    wrap.appendChild(lab);
     frag.appendChild(wrap);
   }
-  patchListEl.innerHTML='';patchListEl.appendChild(frag);applyBtn.disabled=false;
+  patchListEl.innerHTML='';
+  patchListEl.appendChild(frag);
+  applyBtn.disabled=false;
 }
 
-/* =========================
-   File selection & detection
-   ========================= */
+// File handling and edition detection
 fileEl.addEventListener('change', async ()=>{
   clearLog();
-  if(!fileEl.files.length){detectedEl.value='(none)';hashEl.value='';return;}
-  const f=fileEl.files[0];
-  log('Reading file:',f.name,`(${f.size} bytes)`);
-  fileAB=await f.arrayBuffer();
-  workBuf=new Uint8Array(fileAB.slice(0));
-  const hash=await sha256(fileAB);
-  hashEl.value=hash;
-  if(hash===STEAM_SHA256){detectedEdition='steam';detectedEl.value='Steam';editionBadge.textContent='STEAM';editionBadge.style.background='#e6f4ea';}
-  else if(hash===GOG_SHA256){detectedEdition='gog';detectedEl.value='GOG';editionBadge.textContent='GOG';editionBadge.style.background='#e6f0ff';}
-  else{detectedEdition=null;detectedEl.value='Unknown';editionBadge.textContent='?';editionBadge.style.background='#fff0e0';}
-  log(`SHA-256: ${hash}\nEdition: ${detectedEdition||'Unknown'}`);
+  if (!fileEl.files.length) {
+    detectedEl.value = '(none)';
+    hashEl.value = '';
+    return;
+  }
+  const f = fileEl.files[0];
+  if (!f.name.toLowerCase().endsWith('.exe')) {
+    alert('Please select a valid .exe file.');
+    fileEl.value = '';
+    detectedEl.value = '(none)';
+    hashEl.value = '';
+    patchListEl.innerHTML = 'Invalid file type.';
+    return;
+  }
+  log(`Reading file: ${f.name} (${f.size} bytes)`);
+  fileAB = await f.arrayBuffer();
+  workBuf = new Uint8Array(fileAB.slice(0));
+  const hash = await sha256(fileAB);
+  hashEl.value = hash;
+  if (hash === STEAM_SHA256) {
+    detectedEdition = 'steam';
+    detectedEl.value = 'Steam';
+    editionBadge.textContent = 'STEAM';
+    editionBadge.style.background = '#e6f4ea';
+  } else if (hash === GOG_SHA256) {
+    detectedEdition = 'gog';
+    detectedEl.value = 'GOG';
+    editionBadge.textContent = 'GOG';
+    editionBadge.style.background = '#e6f0ff';
+  } else {
+    detectedEdition = null;
+    detectedEl.value = 'Unknown';
+    editionBadge.textContent = '?';
+    editionBadge.style.background = '#fff0e0';
+  }
+  log(`SHA-256: ${hash}\nEdition: ${detectedEdition || 'Unknown'}`);
+  if (detectedEdition) {
+    try { await loadPatches(detectedEdition); }
+    catch (e) { log('Error loading patches:', e.message); }
+  } else {
+    patchListEl.innerHTML = 'Unknown EXE version — no patches loaded.';
+  }
 });
 
-/* =========================
-   Load patches
-   ========================= */
-async function loadManifest(ed){const r=await fetch(`./patches/${ed}/manifest.json`,{cache:'no-store'});if(!r.ok)throw new Error('manifest not found');return (await r.json()).files;}
-async function fetchTxt(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('fetch failed');return r.text();}
+// Patch loading
+async function loadManifest(ed){
+  const r = await fetch(`./patches/${ed}/manifest.json`, {cache:'no-store'});
+  if(!r.ok) throw new Error('manifest not found');
+  return (await r.json()).files;
+}
+async function fetchTxt(u){
+  const r = await fetch(u, {cache:'no-store'});
+  if(!r.ok) throw new Error('fetch failed');
+  return r.text();
+}
 async function loadPatches(ed){
-  groups={};groupMeta={};
-  const files=await loadManifest(ed);
-  for(const fn of files){const base=baseNameForGroup(fn);(groups[base] ||= []).push({name:fn,url:`./patches/${ed}/${fn}`});}
+  groups={}; groupMeta={};
+  const files = await loadManifest(ed);
+  for(const fn of files){
+    const base = baseNameForGroup(fn);
+    (groups[base] ||= []).push({name:fn,url:`./patches/${ed}/${fn}`});
+  }
   renderPatchList();
   for(const [g,fl] of Object.entries(groups)){
-    groupMeta[g]=[];
+    groupMeta[g] = [];
     for(const f of fl){
       try{
-        const t=await fetchTxt(f.url);
-        const kv=parseKV(t);
-        const offStr=(kv.OFFSET||'').trim();
-        const bytesStr=cleanHex((kv.BYTES||'').trim());
-        const desc=(kv.DESC||'(no description)').trim();
-        const offset=/^0x/i.test(offStr)?parseInt(offStr,16):parseInt(offStr,10);
-        const bytes=hexToBytes(bytesStr);
+        const t = await fetchTxt(f.url);
+        const kv = parseKV(t);
+        const offStr = (kv.OFFSET||'').trim();
+        const bytesStr = cleanHex((kv.BYTES||'').trim());
+        const desc = (kv.DESC||'(no description)').trim();
+        const offset = /^0x/i.test(offStr)?parseInt(offStr,16):parseInt(offStr,10);
+        if(!Number.isFinite(offset) || offset < 0) throw new Error('invalid offset');
+        const bytes = hexToBytes(bytesStr);
         groupMeta[g].push({name:f.name,offset,bytes,desc});
-      }catch(e){log('Failed',f.name,e.message);}
+      }catch(e){ log('Failed', f.name, e.message); }
     }
-    const el=document.getElementById('cb_'+g);
-    if(el){const descDiv=el.parentElement.querySelector('.desc');descDiv.textContent=groupMeta[g][0]?.desc||'(no description)';}
+    const el = document.getElementById('cb_'+g);
+    if(el){
+      const descDiv = el.parentElement.querySelector('.desc');
+      descDiv.textContent = groupMeta[g][0]?.desc || '(no description)';
+    }
   }
   log(`Loaded ${Object.keys(groups).length} patch group(s) for ${ed.toUpperCase()}.`);
 }
-loadBtn.addEventListener('click',async()=>{clearLog();if(!fileAB){log('Pick an EXE first.');return;}if(!detectedEdition){log('Unknown edition (hash mismatch).');return;}try{await loadPatches(detectedEdition);}catch(e){log('Error:',e.message);}});
 
-/* =========================
-   Apply patches
-   ========================= */
-applyBtn.addEventListener('click',async()=>{
+// Patch application
+applyBtn.addEventListener('click', async ()=>{
   clearLog();
-  if(!fileAB||!workBuf){log('Pick an EXE first.');return;}
-  const checked=[...patchListEl.querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.group);
-  if(!checked.length){log('No patches selected.');return;}
+  if(!fileAB || !workBuf){ log('Pick an EXE first.'); return; }
+  const checked = [...patchListEl.querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.group);
+  if(!checked.length){ log('No patches selected.'); return; }
   for(const g of checked){
-    const parts=groupMeta[g]||[];if(!parts.length){log('Skipping',g);continue;}
+    const parts = groupMeta[g] || [];
+    if(!parts.length){ log('Skipping', g); continue; }
     log(`--- ${g} (${parts.length} part(s)) ---`);
     for(const p of parts){
-      if(p.offset+p.bytes.length>workBuf.length){log('❌ Out of bounds',p.name);return;}
-      const orig=workBuf.slice(p.offset,p.offset+p.bytes.length);
+      if(p.offset+p.bytes.length>workBuf.length || p.offset<0){ log('❌ Out of bounds',p.name); return; }
       workBuf.set(p.bytes,p.offset);
-      const rb=workBuf.slice(p.offset,p.offset+p.bytes.length);
-      const ok=rb.length===p.bytes.length&&rb.every((v,i)=>v===p.bytes[i]);
+      const rb = workBuf.slice(p.offset,p.offset+p.bytes.length);
+      const ok = rb.length===p.bytes.length && rb.every((v,i)=>v===p.bytes[i]);
       log(`@0x${p.offset.toString(16).toUpperCase()} ${ok?'✔':'✖'} ${p.name}`);
-      if(!ok){log('Verification failed.');return;}
+      if(!ok){ log('Verification failed.'); return; }
     }
   }
-  if(blobUrl)URL.revokeObjectURL(blobUrl);
-  const blob=new Blob([workBuf],{type:'application/octet-stream'});
-  blobUrl=URL.createObjectURL(blob);
-  dlEl.href=blobUrl;
-  const newName=(fileEl.files[0]?.name||'patched.exe').replace(/(\.exe)?$/i,'')+'-patched.exe';
-  dlEl.download=newName;
+  if(blobUrl) URL.revokeObjectURL(blobUrl);
+  const blob = new Blob([workBuf],{type:'application/octet-stream'});
+  blobUrl = URL.createObjectURL(blob);
+  dlEl.href = blobUrl;
+  const newName = (fileEl.files[0]?.name||'patched.exe').replace(/(\.exe)?$/i,'')+'-patched.exe';
+  dlEl.download = newName;
   dlEl.classList.remove('disabled');
   log('\nAll patches applied & verified.\nClick "Download patched file" to save.');
 });
-dlEl.addEventListener('click',()=>{if(dlEl.classList.contains('disabled'))return;setTimeout(()=>{if(blobUrl){URL.revokeObjectURL(blobUrl);blobUrl=null;dlEl.classList.add('disabled');}},30000);});
+
+// Download handling
+dlEl.addEventListener('click',()=>{
+  if(dlEl.classList.contains('disabled')) return;
+  setTimeout(()=>{
+    if(blobUrl){
+      URL.revokeObjectURL(blobUrl);
+      blobUrl=null;
+      dlEl.classList.add('disabled');
+    }
+  },30000);
+});
 </script>
 </body>
 </html>
